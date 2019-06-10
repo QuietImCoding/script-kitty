@@ -5,20 +5,60 @@ _find_bash_config() {
     else echo "$HOME/.bashrc"; fi
 }
 
-install() {
-    if [[ ! -d ~/.script_kitty ]]; then
-	mkdir ~/.script_kitty
-    fi
+_kitty_install() {
     conf=$(_find_bash_config)
-    if $(grep -qv "SCRIPT_KITTY_MAGIC_YARNBALL" $conf); then
+    if grep -q "SCRIPT_KITTY_MAGIC_YARNBALL" $conf; then
+	echo "Looks like script-kitty is already set up!"
+    else
 	KITTY_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	export KITTY_HOME
 	echo "## SCRIPT_KITTY_MAGIC_YARNBALL ##" >> $conf
-	read -p "Kitty needs a github: " ghuser
-	touch "$KITTY_HOME/.kittens"
-	for yarnball in $(cat "$KITTY_HOME/.kittens"); do
+	echo "export KITTY_HOME=$KITTY_HOME" >> $conf
+	read -p "Kitty needs a github: " KITTY_USER
+	echo "export KITTY_USER=$KITTY_USER" >> $conf
+	echo "source $KITTY_HOME/script-kitty" >> $conf
+	echo "## END_MAGIC_YARNBALL ##" >> $conf
+	touch "$KITTY_HOME/.kitty_yarn"
+	for yarnball in $(cat "$KITTY_HOME/.kitty_yarn"); do
 	    echo $yarnball
 	done
     fi
 }
 
-install
+_kitty_remove() {
+    grep -v "$1" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
+	mv .tempkitty "$KITTY_HOME/.kitty_yarn"
+}
+
+_kitty_list() {
+    echo "Your kitty has the following yarn balls:"
+    for l in "$(cat $KITTY_HOME/.kitty_yarn)"; do
+	echo " - $l"
+    done
+}
+
+_kitty_add() {
+    if $(grep -q $1 "$KITTY_HOME/.kitty_yarn"); then
+	echo "Yarnball already installed!!"
+    else
+	echo $1 >> "$KITTY_HOME/.kitty_yarn"
+	echo "Added yarnball $1"
+    fi
+}
+
+_kitty_update() {
+    source "$KITTY_HOME/script-kitty"
+    echo "Updated script-kitty!!"
+}
+
+kitty() {
+    cmd=$1
+    shift
+    case $cmd in
+	'add') 	_kitty_add $@;;
+	'remove') _kitty_remove $@;;
+	'list') _kitty_list $@;;
+	'update') _kitty_update $@;;	
+	'install') _kitty_install $@;;
+    esac
+}
