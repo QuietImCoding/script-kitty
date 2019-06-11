@@ -1,5 +1,9 @@
 #!/bin/bash
 
+_find_repo_name() {
+    echo "$1" | rev | cut -d'/' -f1 | rev
+}
+
 _find_bash_config() {
     if [[ -f ~/.bash_profile ]]; then echo "$HOME/.bash_profile";
     else echo "$HOME/.bashrc"; fi
@@ -25,18 +29,35 @@ _kitty_install() {
 
 _kitty_pull() {
     echo "Kitty is tugging on loose ends..."
+    conf="$(_find_bash_config)"
     for yarnball in $(cat "$KITTY_HOME/.kitty_yarn"); do
-	if [[ -d "$KITTY_HOME/yarn_pile/$yarnball" ]]; then
+	cleaned_yarn="$(_find_repo_name $yarnball)"
+	yarn_dir="$KITTY_HOME/yarn_pile/$cleaned_yarn"
+	if [[ -d "$yarn_dir" ]]; then
 	    owd=$(pwd)
-	    cd "$KITTY_HOME/yarn_pile/$yarnball" || continue
+	    cd "$yarn_dir" || continue
 	    git pull &>/dev/null
 	    cd $owd
 	    echo " - Updated $yarnball"
 	else
 	    owd=$(pwd)
+	    kitty_end="## END_MAGIC_YARNBALL ##"
+	    src_yarn="source $KITTY_HOME/yarn_pile/$cleaned_yarn/$cleaned_yarn"
+
 	    cd "$KITTY_HOME/yarn_pile" || continue
-	    git clone "https://github.com/$KITTY_USER/$yarnball" &>/dev/null
+	    if echo "$yarnball" | grep -q '/'; then
+		git clone "https://github.com/$yarnball" &>"$KITTY_HOME/.catlog" ||
+		    echo " - Kitty could not find '$yarnball' *sad kitty*"
+	    else
+		git clone "https://github.com/$KITTY_USER/$yarnball" &>"$KITTY_HOME/.kittylog" ||
+		    echo " - Kitty could not find '$yarnball' *sad kitty*"
+	    fi
 	    cd $owd
+	    # This statement is so janky but MacOS sed is terrible
+	    # and I don't want to do different things depending on the sed version
+	    
+	    sed -i '' "s:$kitty_end:$src_yarn\\$(printf '\n')
+$kitty_end:g" $conf
 	    echo " - Kitty grabbed $yarnball"
 	fi
     done
@@ -44,10 +65,15 @@ _kitty_pull() {
 
 _kitty_remove() {
     if grep -q "$1" "$KITTY_HOME/.kitty_yarn"; then
-	grep -v "$1" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
+	conf="$(_find_bash_config)"
+	cleaned_yarn="$(_find_repo_name $1)"
+	grep -v "$cleaned_yarn" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
 	    mv .tempkitty "$KITTY_HOME/.kitty_yarn"
-	if [[ -d "$KITTY_HOME/yarn_pile/$1" ]]; then
-	    rm -rf "$KITTY_HOME/yarn_pile/$1"
+	grep -v "$KITTY_HOME/yarn_pile/$cleaned_yarn" "$conf" > .tempkitty &&
+	    mv .tempkitty "$conf"
+	
+	if [[ -d "$KITTY_HOME/yarn_pile/$cleaned_yarn" ]]; then
+	    rm -rf "$KITTY_HOME/yarn_pile/$cleaned_yarn"
 	fi
 	echo "Kitty threw $1 out the window"
     else
