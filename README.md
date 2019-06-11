@@ -11,10 +11,11 @@ But what happens when you need to log into another computer? Panic. Pandemonium.
 
 Script kitty is meant to be systematic solution to all of your terminal environment woes. Still in early development, script kitty imposes a common-sense framework on your dumpster fire of a bash config and makes it so that if you ever need to move computers, you can just use your kitty config file to install your custom scripts and manage their configurations. Gone are the days of going repo by repo, trying to figure out where that one alias is on Github. Script kitty is here to help.
 
-#### Disclaimer ####
-
-Script kitty is in *very* early development, and is something of a side project. Feel free to contribute and give feedback but don't go into this thinking everything will work purrfectly.
-
 ## Rulez ##
 
 Script kitty by default will source the file in your directory with the same name as the repo. This means that whatever functions or aliases you have should probably be in a file with the same name as whatever repositories you want to use. If you have pre-written installers, they should bein a file with the same name as the repo and have the extension .install.
+
+
+#### Disclaimer ####
+
+Script kitty is in *very* early development, and is something of a side project. Feel free to contribute and give feedback but don't go into this thinking everything will work purrfectly.
