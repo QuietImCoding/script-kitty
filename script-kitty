@@ -69,11 +69,14 @@ _kitty_remove() {
     if grep -q "$1" "$KITTY_HOME/.kitty_yarn"; then
 	conf="$(_find_bash_config)"
 	cleaned_yarn="$(_find_repo_name $1)"
-	grep -v "$cleaned_yarn" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
-	    mv .tempkitty "$KITTY_HOME/.kitty_yarn"
-	grep -v "$KITTY_HOME/yarn_pile/$cleaned_yarn" "$conf" > .tempkitty &&
-	    mv .tempkitty "$conf"
-	
+	if [[ $(wc -l < "$KITTY_HOME/.kitty_yarn") -eq 1 ]]; then
+	    echo > "$KITTY_HOME/.kitty_yarn"
+	else
+	    grep -v $1 "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
+		mv .tempkitty "$KITTY_HOME/.kitty_yarn"
+	    grep -v "$KITTY_HOME/yarn_pile/$cleaned_yarn" "$conf" > .tempkitty &&
+		mv .tempkitty "$conf"
+	fi
 	if [[ -d "$KITTY_HOME/yarn_pile/$cleaned_yarn" ]]; then
 	    rm -rf "$KITTY_HOME/yarn_pile/$cleaned_yarn"
 	fi
