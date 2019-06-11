@@ -12,7 +12,9 @@ _find_bash_config() {
 _kitty_install() {
     conf=$(_find_bash_config)
     if grep -q "SCRIPT_KITTY_MAGIC_YARNBALL" $conf; then
-	echo "Set up script-kitty!"
+	kitty update
+	kitty add $1
+	kitty pull
     else
 	KITTY_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	export KITTY_HOME
@@ -113,5 +115,14 @@ kitty() {
 	'pull') _kitty_pull $@;;
 	'update') _kitty_update $@;;	
 	'install') _kitty_install $@;;
+	*) cat <<EOF
+Usage: kitty [cmd] [args]:
+       Valid commands are:
+       	     * add [ repo ] - adds a new yarnball
+	     * remove [ repo ] - removes a yarnball
+	     * list - lists all stored yarn balls
+	     * pull - pulls balls of yarn from the cloud
+	     * install - does the initial set up or will add + pull
+EOF
     esac
 }
