@@ -8,7 +8,7 @@ _find_bash_config() {
 _kitty_install() {
     conf=$(_find_bash_config)
     if grep -q "SCRIPT_KITTY_MAGIC_YARNBALL" $conf; then
-	echo "Looks like script-kitty is already set up!"
+	echo "Set up script-kitty!"
     else
 	KITTY_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	export KITTY_HOME
@@ -19,23 +19,49 @@ _kitty_install() {
 	echo "source $KITTY_HOME/script-kitty" >> $conf
 	echo "## END_MAGIC_YARNBALL ##" >> $conf
 	touch "$KITTY_HOME/.kitty_yarn"
-	for yarnball in $(cat "$KITTY_HOME/.kitty_yarn"); do
-	    echo $yarnball
-	done
+	mkdir "$KITTY_HOME/yarn_pile"
     fi
 }
 
+_kitty_pull() {
+    echo "Kitty is tugging on loose ends..."
+    for yarnball in $(cat "$KITTY_HOME/.kitty_yarn"); do
+	if [[ -d "$KITTY_HOME/yarn_pile/$yarnball" ]]; then
+	    owd=$(pwd)
+	    cd "$KITTY_HOME/yarn_pile/$yarnball" || continue
+	    git pull &>/dev/null
+	    cd $owd
+	    echo " - Updated $yarnball"
+	else
+	    owd=$(pwd)
+	    cd "$KITTY_HOME/yarn_pile" || continue
+	    git clone "https://github.com/$KITTY_USER/$yarnball" &>/dev/null
+	    cd $owd
+	    echo " - Kitty grabbed $yarnball"
+	fi
+    done
+}
+
 _kitty_remove() {
-    grep -v "$1" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
-	mv .tempkitty "$KITTY_HOME/.kitty_yarn"
+    if grep -q "$1" "$KITTY_HOME/.kitty_yarn"; then
+	grep -v "$1" "$KITTY_HOME/.kitty_yarn" > .tempkitty &&
+	    mv .tempkitty "$KITTY_HOME/.kitty_yarn"
+	if [[ -d "$KITTY_HOME/yarn_pile/$1" ]]; then
+	    rm -rf "$KITTY_HOME/yarn_pile/$1"
+	fi
+	echo "Kitty threw $1 out the window"
+    else
+	echo "Kitty couldn't find $1.... Kitty is confused"
+    fi
 }
 
 _kitty_list() {
     echo "Your kitty has the following yarn balls:"
-    for l in "$(cat $KITTY_HOME/.kitty_yarn)"; do
+    for l in $(cat $KITTY_HOME/.kitty_yarn); do
 	echo " - $l"
     done
 }
+
 
 _kitty_add() {
     if $(grep -q $1 "$KITTY_HOME/.kitty_yarn"); then
@@ -58,6 +84,7 @@ kitty() {
 	'add') 	_kitty_add $@;;
 	'remove') _kitty_remove $@;;
 	'list') _kitty_list $@;;
+	'pull') _kitty_pull $@;;
 	'update') _kitty_update $@;;	
 	'install') _kitty_install $@;;
     esac
