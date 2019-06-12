@@ -15,7 +15,7 @@ Script kitty is meant to be systematic solution to all of your terminal environm
 
   * Script kitty by default will source the file in your directory with the same name as the repo. This means that whatever functions or aliases you have should probably be in a file with the same name as whatever repositories you want to use. 
   * If you have pre-written installers, they should bein a file with the same name as the repo and have the extension .install. This will get run when `kitty install` gets run after the initiall repo pull. If that doesn't work, you can try to fix the installer file and run it with `kitty setup`. 
-  * If you're a kind soul and want to provide an uninstaller, provide a script with the same name as the repo and the extension .uninstall. This will get run when your script is removed should clean up any potential garbage your script generates on a system.
+  * If you're a kind soul and want to provide an uninstaller, provide a script with the same name as the repo and the extension .uninstall. This will get run when `kitty remove` is called and should clean up any potential garbage your script generates on a system.
 
 
 #### Disclaimer ####
