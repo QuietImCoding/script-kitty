@@ -1,0 +1,7 @@
+_kitty()
+{
+    accepted_cmds="add remove list pull update install open addstore liststores help"
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=( $(compgen -W "$accepted_cmds" -- $cur) )
+}
+complete -F _kitty kitty

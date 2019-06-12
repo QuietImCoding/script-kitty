@@ -10,12 +10,31 @@ _find_bash_config() {
     else echo "$HOME/.bashrc"; fi
 }
 
+_kitty_run_installer() {
+    yarn_name="$(_find_repo_name $1)"
+    install_loc="$yarn_name.install"
+    owd=$(pwd)
+    cd "$KITTY_HOME/yarn_pile/$yarn_name" || return
+    if  [[ -f $install_loc ]]; then
+	echo "Kitty is trying to install $1..."
+	./$install_loc ||
+	    echo "Something went wrong installing... kitty is sorry ;-;" &&
+		return
+	echo "Kitty has installed $1"
+    else
+	echo "Kitty found no installer for $1"
+    fi
+    cd $owd
+}
+
 _kitty_install() {
     conf=$(_find_bash_config)
     if grep -q "SCRIPT_KITTY_MAGIC_YARNBALL" $conf; then
 	kitty update
 	kitty add $1
 	kitty pull
+	_kitty_run_installer $1
+	source $conf
     else
 	KITTY_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	export KITTY_HOME
@@ -25,6 +44,7 @@ _kitty_install() {
 	echo "export KITTY_USER=$KITTY_USER" >> $conf
 	echo "source $KITTY_HOME/script-kitty" >> $conf
 	echo "## END_MAGIC_YARNBALL ##" >> $conf
+	cat "$KITTY_HOME/kitty_completion" >> ~/.bash_completion
 	touch "$KITTY_HOME/.kitty_yarn"
 	mkdir "$KITTY_HOME/yarn_pile"
     fi
@@ -40,7 +60,7 @@ _kitty_pull() {
     for yarnball in $(cat "$KITTY_HOME/.kitty_yarn"); do
 	yarn_name="$(_find_repo_name $yarnball)"
 	yarn_loc="$(echo $yarnball | cut -d'@' -f1)"
-	yarn_dir="$KITTY_HOME/yarn_pile/$cleaned_yarn"
+	yarn_dir="$KITTY_HOME/yarn_pile/$yarn_name"
 	if [[ -d "$yarn_dir" ]]; then
 	    owd=$(pwd)
 	    cd "$yarn_dir" || continue
@@ -50,26 +70,28 @@ _kitty_pull() {
 	else
 	    owd=$(pwd)
 	    kitty_end="## END_MAGIC_YARNBALL ##"
-	    src_yarn="source $KITTY_HOME/yarn_pile/$yarn_name/$yarn_name"
+	    yarn_home="$KITTY_HOME/yarn_pile/$yarn_name/$yarn_name"
 	    kitty_domain="https://github.com"
 	    if echo "$yarnball" | grep -q '@'; then
 		kitty_domain="$(_lookup_yarnstore $(echo $yarnball | rev | cut -d'@' -f1 | rev))"
 	    fi
 	    cd "$KITTY_HOME/yarn_pile" || continue
 	    if echo "$yarnball" | grep -q '/'; then
-		git clone "$kitty_domain/$yarn_loc" >>"$KITTY_HOME/.kitty_log.git" ||
+		git clone "$kitty_domain/$yarn_loc.git" &>"$KITTY_HOME/.kitty_log" ||
 		    echo " - Kitty could not find '$yarnball' *sad kitty*" &&
-			cd $owd && continue
+			cd $owd
 	    else
-		git clone "$kitty_domain/$KITTY_USER/$yarn_name.git" >>"$KITTY_HOME/.kitty_log" ||
+		git clone "$kitty_domain/$KITTY_USER/$yarn_name.git" &>"$KITTY_HOME/.kitty_log" ||
 		    echo " - Kitty could not find '$yarnball' *sad kitty*" &&
-			cd $owd && continue
+			cd $owd
 	    fi
 	    cd $owd
 	    # This statement is so janky but MacOS sed is terrible
 	    # and I don't want to do different things depending on the sed version
-	    sed -i '' "s:$kitty_end:$src_yarn\\$(printf '\n')
+	    if [[ -f $yarn_home ]]; then
+		sed -i '' "s:$kitty_end:source $yarn_home\\$(printf '\n')
 $kitty_end:g" $conf
+	    fi
 	    echo " - Kitty grabbed $yarnball"
 	fi
     done
@@ -88,6 +110,10 @@ _kitty_remove() {
 		mv .tempkitty "$conf"
 	fi
 	if [[ -d "$KITTY_HOME/yarn_pile/$cleaned_yarn" ]]; then
+	    if [[ -f "$KITTY_HOME/yarn_pile/$cleaned_yarn/$cleaned_yarn.uninstall" ]]
+	    then
+		$KITTY_HOME/yarn_pile/$cleaned_yarn/$cleaned_yarn.uninstall
+	    fi		
 	    rm -rf "$KITTY_HOME/yarn_pile/$cleaned_yarn"
 	fi
 	echo "Kitty threw $1 out the window"
@@ -125,6 +151,11 @@ _kitty_open() {
 	echo "Could not open $cleaned_yarn... is your \$EDITOR variable set?"
 }
 
+_kitty_liststores() {
+    echo "You buy your kitty yarn at the following stores:"
+    cat "$KITTY_HOME/.yarn_stores"
+}
+
 _kitty_addstore() {
     if [[ ${#@} -eq 0 ]]; then
 	read -p "Name of yarn store: " storename
@@ -142,20 +173,32 @@ kitty() {
     case $cmd in
 	'add') 	_kitty_add $@;;
 	'remove') _kitty_remove $@;;
+	'rm') _kitty_remove $@;;
 	'list') _kitty_list $@;;
+	'ls') _kitty_list $@;;
 	'pull') _kitty_pull $@;;
-	'update') _kitty_update $@;;	
+	'update') _kitty_update $@;;
+	'setup') _kitty_run_installer $@;;	
 	'install') _kitty_install $@;;
 	'open') _kitty_open $@;;
+	'edit') _kitty_open $@;;
 	'addstore') _kitty_addstore $@;;
+	'liststores') _kitty_liststores $@;;	
 	*) cat <<EOF
 Usage: kitty [cmd] [args]:
-       Valid commands are:
-       	     * add [ repo ] - adds a new yarnball
-	     * remove [ repo ] - removes a yarnball
-	     * list - lists all stored yarn balls
-	     * pull - pulls balls of yarn from the cloud
+       Get set up:
 	     * install - does the initial set up or will add + pull
+       Add new yarn balls:
+       	     * add [USER/]<YARNBALL>[@STORE] - adds a new yarnball
+	     * pull - pulls balls of yarn from the cloud
+	     * install [USER/]<YARNBALL>[@STORE] - adds, pulls + runs install script
+       Manage your yarn balls:
+	     * list(ls) - list all installed yarnballs
+	     * remove(rm) <YARNBALL> - get rid of a yarnball
+	     * edit/open <YARNBALL> - open the script for a yarn ball in your default editor
+       Manage yarn stores:
+       	      * addstore [STORE] [LOCATION] - create a new store from which to retrive yarnballs. ( by default kitty uses GitHub )
+	      * liststores - show all of your yarn stores
 EOF
     esac
 }
