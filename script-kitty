@@ -97,6 +97,19 @@ $kitty_end:g" $conf
     done
 }
 
+_kitty_push() {
+    echo "Kitty is gently nudging $1 back to the yarn store"
+    owd=$(pwd)
+    cleaned_yarn="$(_find_repo_name $1)"
+    echo "Kitty notices the yarn is different..."
+    read -p "What did you do? " kitty_changes
+    cd "$KITTY_HOME/yarn_pile/$cleaned_yarn" || return
+    git commit -a -m "$kitty_changes"
+    git push -q
+    cd $owd
+    echo "The yarn store has accepted your modified yarn ball"
+}
+
 _kitty_remove() {
     if grep -q "$1" "$KITTY_HOME/.kitty_yarn"; then
 	conf="$(_find_bash_config)"
@@ -177,6 +190,7 @@ kitty() {
 	'list') _kitty_list $@;;
 	'ls') _kitty_list $@;;
 	'pull') _kitty_pull $@;;
+	'push') _kitty_push $@;;
 	'update') _kitty_update $@;;
 	'setup') _kitty_run_installer $@;;	
 	'install') _kitty_install $@;;
@@ -188,14 +202,16 @@ kitty() {
 Usage: kitty [cmd] [args]:
        Get set up:
 	     * install - does the initial set up or will add + pull
+	     * setup <YARNBALL> - if the install script fails, you can use setup to try to run the new installer without adding and pulling again
        Add new yarn balls:
        	     * add [USER/]<YARNBALL>[@STORE] - adds a new yarnball
-	     * pull - pulls balls of yarn from the cloud
+	     * pull - pulls balls of yarn from your favorite yarn store
 	     * install [USER/]<YARNBALL>[@STORE] - adds, pulls + runs install script
        Manage your yarn balls:
 	     * list(ls) - list all installed yarnballs
 	     * remove(rm) <YARNBALL> - get rid of a yarnball
 	     * edit/open <YARNBALL> - open the script for a yarn ball in your default editor
+	     * push - if you've made any changes to the yarn ball, kitty will push them back to your yarn store
        Manage yarn stores:
        	      * addstore [STORE] [LOCATION] - create a new store from which to retrive yarnballs. ( by default kitty uses GitHub )
 	      * liststores - show all of your yarn stores
