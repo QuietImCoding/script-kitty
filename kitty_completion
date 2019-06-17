@@ -1,6 +1,6 @@
 _kitty()
 {
-    accepted_cmds="add remove rm list ls pull push update setup install open addstore liststores help"
+    accepted_cmds="add remove rm list ls pull push update setup install open addstore liststores help $(cat $KITTY_HOME/.kitty_yarn)"
     local cur=${COMP_WORDS[COMP_CWORD]}
     COMPREPLY=( $(compgen -W "$accepted_cmds" -- $cur) )
 }
