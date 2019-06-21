@@ -155,6 +155,7 @@ _kitty_add() {
 _kitty_update() {
     conf=$(_find_bash_config)
     source $conf
+    source ~/.bash_completion 2>/dev/null
     # source "$KITTY_HOME/script-kitty"
     echo "Updated script-kitty!!"
 }
