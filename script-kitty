@@ -198,7 +198,7 @@ kitty() {
 	'setup') _kitty_run_installer $@;;	
 	'install') _kitty_install $@;;
 	'open') _kitty_open $@;;
-	'cd') cd "$KITTY_HOME/yarn_pile/$yarn_name" || return;;
+	'cd') cd "$KITTY_HOME/yarn_pile/$1" || return;;
 	'edit') _kitty_open $@;;
 	'addstore') _kitty_addstore $@;;
 	'liststores') _kitty_liststores $@;;	
