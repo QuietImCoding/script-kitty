@@ -1,5 +1,6 @@
-# script-kitty
 ![script-kitty](kitty.png)
+
+# script-kitty
 ## Get your scripts together
 
 ## The Problem ##
