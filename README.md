@@ -1,8 +1,9 @@
+# script-kitty
+
 <p align="center"> 
 <img src="kitty.png">
 </p>
 
-# script-kitty
 ## Get your scripts together
 
 ## The Problem ##
