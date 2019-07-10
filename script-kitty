@@ -1,5 +1,10 @@
 #!/bin/bash
 
+source kitty_completion
+# Used to let scripts find their own folders
+_kitty_laser_pointer='echo $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )'
+export _kitty_laser_pointer
+
 _find_repo_name() {
     unslashed=$(echo "$1" | rev | cut -d'/' -f1 | rev)
     echo $unslashed | cut -d'@' -f1
@@ -54,6 +59,14 @@ _lookup_yarnstore() {
     echo "$(grep "$1\t" "$KITTY_HOME/.yarn_stores" | rev | cut -d$'\t' -f1 | rev)"
 }
 
+_kitty_link() {
+    conf="$(_find_bash_config)"
+    kitty_end="## END_MAGIC_YARNBALL ##"
+    yarn_home="$KITTY_HOME/yarn_pile/$1/$1"
+    sed -i '' "s:$kitty_end:source $yarn_home\\$(printf '\n')
+$kitty_end:g" $conf
+}
+
 _kitty_pull() {
     echo "Kitty is tugging on loose ends..."
     conf="$(_find_bash_config)"
@@ -88,7 +101,9 @@ _kitty_pull() {
 	    cd $owd
 	    # This statement is so janky but MacOS sed is terrible
 	    # and I don't want to do different things depending on the sed version
+	    echo $yarn_home
 	    if [[ -f $yarn_home ]]; then
+		echo 'oh jeez'
 		sed -i '' "s:$kitty_end:source $yarn_home\\$(printf '\n')
 $kitty_end:g" $conf
 	    fi
@@ -155,7 +170,7 @@ _kitty_add() {
 _kitty_update() {
     conf=$(_find_bash_config)
     source $conf
-    source ~/.bash_completion 2>/dev/null
+    source $KITTY_HOME/kitty_completion
     # source "$KITTY_HOME/script-kitty"
     echo "Updated script-kitty!!"
 }
