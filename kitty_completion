@@ -1,3 +1,4 @@
+#!/bin/bash
 _kitty()
 {
     repos="$(for r in $(cat $KITTY_HOME/.kitty_yarn); do _find_repo_name $r; done)"
