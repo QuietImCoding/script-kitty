@@ -1,6 +1,5 @@
 #!/bin/bash
 
-source kitty_completion
 # Used to let scripts find their own folders
 _kitty_laser_pointer='echo $( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )'
 export _kitty_laser_pointer
@@ -238,3 +237,5 @@ Usage: kitty [cmd] [args]:
 EOF
     esac
 }
+
+source $KITTY_HOME/kitty_completion
