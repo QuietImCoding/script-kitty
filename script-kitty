@@ -42,7 +42,7 @@ _kitty_install() {
     else
 	KITTY_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	export KITTY_HOME
-	echo "## SCRIPT_KITTY_MAGIC_YARNBALL ##" >> $con
+	echo "## SCRIPT_KITTY_MAGIC_YARNBALL ##" >> $conf
 	echo "export KITTY_HOME=$KITTY_HOME" >> $conf
 	read -p "Kitty needs a github: " KITTY_USER
 	echo "export KITTY_USER=$KITTY_USER" >> $conf
@@ -238,4 +238,6 @@ EOF
     esac
 }
 
-source $KITTY_HOME/kitty_completion
+if [[ -n $KITTY_HOME ]]; then
+    source $KITTY_HOME/kitty_completion
+fi
