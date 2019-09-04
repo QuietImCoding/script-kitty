@@ -6,6 +6,13 @@
 
 ## Get your scripts together
 
+## How 2 Install
+
+- clone the repo
+- run `source script-kitty`
+- run `kitty install`
+- pray
+
 ## The Problem ##
 
 We've all been there. You configure this one thing, tweak another thing and seemingly out of nowhere you find your bash environment is basically its own custom operating system! Of course, this happens incrementally, so that as long as you are working on your own machine, you are in a perpetual state of workflow bliss, masterfully navigating between obscure menus and running strange scripts on random dotfiles. 
